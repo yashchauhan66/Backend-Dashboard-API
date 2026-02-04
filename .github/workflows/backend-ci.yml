@@ -1,11 +1,11 @@
-name: Backend CI
+name: Backend CI/CD (Render)
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./backend
 
       - name: Run tests
         run: npm test
+        working-directory: ./backend
