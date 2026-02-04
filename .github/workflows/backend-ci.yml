@@ -2,29 +2,31 @@ name: Backend CI/CD (Render)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  test:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Repo checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Node setup
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # 3️⃣ Debug (optional but safe)
       - name: Debug repo layout
         run: |
           pwd
-          echo "Top-level files:"
           ls -la
-          echo "Find package.json:"
           find . -maxdepth 3 -name package.json -print || true
 
+      # 4️⃣ Install dependencies
       - name: Install dependencies
         run: |
           if [ -f ./backend/package.json ]; then
@@ -34,10 +36,11 @@ jobs:
             echo "Installing in repo root"
             npm ci
           else
-            echo "No package.json found — aborting"
+            echo "No package.json found"
             exit 1
           fi
 
+      # 5️⃣ Run tests
       - name: Run tests
         run: |
           if [ -f ./backend/package.json ]; then
@@ -45,3 +48,10 @@ jobs:
           else
             npm test
           fi
+
+      # 6️⃣ Deploy to Render (CD)
+      - name: Deploy to Render
+        if: success()
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -X POST "$RENDER_DEPLOY_HOOK"
